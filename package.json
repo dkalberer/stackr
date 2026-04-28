@@ -13,6 +13,5 @@
     "type-check": "pnpm --filter frontend type-check",
     "lint": "pnpm --filter frontend lint",
     "format": "pnpm --filter frontend format"
-  },
-  "packageManager": "pnpm@9.0.0"
+  }
 }
