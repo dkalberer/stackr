@@ -1,0 +1,13 @@
+apiVersion: v2
+name: stackr
+description: stackr - Personal net worth and savings rate tracker
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - finance
+  - net-worth
+  - personal-finance
+  - pwa
+maintainers:
+  - name: stackr Contributors

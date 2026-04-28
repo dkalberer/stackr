@@ -1,0 +1,49 @@
+# Production overrides.
+# Secrets (dbPassword, jwtSecret) must be supplied via a secrets manager
+# or a sealed-secrets / external-secrets operator — do NOT commit them here.
+
+backend:
+  image:
+    pullPolicy: Always
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  env:
+    CORS_ORIGIN: "https://stackr.example.com"
+
+frontend:
+  image:
+    pullPolicy: Always
+  replicas: 2
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 400m
+      memory: 256Mi
+
+postgres:
+  storage: 50Gi
+  storageClassName: ssd  # adjust for your cloud provider (gp3, premium-rwo, etc.)
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+
+ingress:
+  host: stackr.example.com
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls:
+    - secretName: stackr-tls
+      hosts:
+        - stackr.example.com

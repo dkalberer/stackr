@@ -1,0 +1,18 @@
+{
+  "name": "stackr",
+  "private": true,
+  "description": "stackr - Personal net worth and savings rate tracker",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "pnpm --filter frontend dev",
+    "build": "pnpm --filter frontend build",
+    "test": "pnpm --filter frontend test --run",
+    "type-check": "pnpm --filter frontend type-check",
+    "lint": "pnpm --filter frontend lint",
+    "format": "pnpm --filter frontend format"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

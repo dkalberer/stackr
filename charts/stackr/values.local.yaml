@@ -1,0 +1,24 @@
+# Local development overrides.
+# Images are loaded directly into the kind cluster — never pull from a registry.
+
+backend:
+  image:
+    pullPolicy: Never
+  env:
+    CORS_ORIGIN: "http://stackr.localhost"
+  # Secrets injected via values (not from an external secret manager in local dev)
+  # Override secrets section below
+
+frontend:
+  image:
+    pullPolicy: Never
+
+postgres:
+  storageClassName: standard
+
+ingress:
+  host: stackr.localhost
+
+secrets:
+  dbPassword: "local-dev-password"
+  jwtSecret: "local-dev-secret"

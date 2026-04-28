@@ -1,0 +1,82 @@
+# Default values for stackr.
+# Override in values.local.yaml or values.prod.yaml as needed.
+
+# ── Backend ───────────────────────────────────────────────────────────────────
+
+backend:
+  image:
+    repository: stackr/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  env:
+    PORT: "8080"
+    DB_HOST: stackr-postgres
+    DB_PORT: "5432"
+    DB_NAME: postgres
+    DB_USER: postgres
+    DB_SCHEMA: stackr
+    CORS_ORIGIN: ""
+  # Secrets are expected to exist as a Kubernetes Secret named stackr-secrets.
+  # See templates/secrets.yaml – passwords are injected from the values below
+  # and should be overridden per-environment.
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+
+frontend:
+  image:
+    repository: stackr/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+
+postgres:
+  image:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+  storage: 10Gi
+  storageClassName: standard
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+
+# ── Ingress ───────────────────────────────────────────────────────────────────
+
+ingress:
+  enabled: true
+  className: nginx
+  host: stackr.local
+  annotations: {}
+  tls: []
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# These values are rendered into a Kubernetes Secret. Override in each
+# environment's values file and NEVER commit real secrets to source control.
+
+secrets:
+  dbPassword: "changeme"
+  jwtSecret: "changeme-use-a-long-random-string"
