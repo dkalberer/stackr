@@ -1,0 +1,18 @@
+# Dependencies — never copy local node_modules into Docker
+**/node_modules
+
+# Git
+.git
+.gitignore
+
+# Local env / secrets
+.env*
+*.local
+
+# Build artefacts
+apps/frontend/dist
+apps/backend/bin
+
+# Helm / task artefacts
+charts/
+.image-tag

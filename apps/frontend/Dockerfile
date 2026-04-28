@@ -8,8 +8,8 @@ RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/frontend/package.json ./apps/frontend/
 
-# Install dependencies (filtered to frontend only)
-RUN pnpm install --frozen-lockfile --filter stackr-frontend
+# Install dependencies
+RUN pnpm install --frozen-lockfile
 
 # Copy frontend source
 COPY apps/frontend/ ./apps/frontend/
