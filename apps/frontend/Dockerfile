@@ -15,7 +15,7 @@ RUN pnpm install --frozen-lockfile
 COPY apps/frontend/ ./apps/frontend/
 
 # Build
-RUN pnpm --filter stackr-frontend build
+RUN pnpm --filter frontend build
 
 # ── Runtime ─────────────────────────────────────────────────────────────────
 FROM nginx:1.27-alpine AS runtime
