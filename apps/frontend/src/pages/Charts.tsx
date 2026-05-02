@@ -351,7 +351,10 @@ export function Charts() {
                       key={account.id}
                       label={account.name}
                       size="small"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleAccount(account.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { toggleAccount(account.id); e.preventDefault() } }}
                       sx={{
                         fontSize: '0.75rem',
                         backgroundColor: isSelected ? alpha(color, 0.15) : alpha('#fff', 0.05),

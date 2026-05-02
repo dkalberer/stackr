@@ -208,8 +208,15 @@ export function AccountDetail() {
           Monatlicher Verlauf
         </Typography>
         <Card>
-          <TableContainer>
-            <Table size="small">
+          <TableContainer
+            sx={{
+              overflowX: 'auto',
+              // subtle scrollbar hint on webkit so users know the table is scrollable
+              '&::-webkit-scrollbar': { height: 4 },
+              '&::-webkit-scrollbar-thumb': { borderRadius: 2, bgcolor: 'divider' },
+            }}
+          >
+            <Table size="small" sx={{ minWidth: 480 }}>
               <TableHead>
                 <TableRow>
                   <TableCell>Monat</TableCell>

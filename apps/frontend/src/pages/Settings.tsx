@@ -55,6 +55,7 @@ export function Settings() {
   const [pwSaving, setPwSaving] = useState(false)
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isPWA, setIsPWA] = useState(false)
 
@@ -230,8 +231,10 @@ export function Settings() {
             <ListItemText
               primary="Passwort ändern"
               secondary="Aktuelles Passwort erforderlich"
-              primaryTypographyProps={{ fontSize: '0.9375rem', fontWeight: 500 }}
-              secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              slotProps={{
+                primary: { style: { fontSize: '0.9375rem', fontWeight: 500 } },
+                secondary: { style: { fontSize: '0.75rem' } },
+              }}
             />
           </ListItemButton>
 
@@ -245,14 +248,16 @@ export function Settings() {
                 onChange={(e) => setPwCurrent(e.target.value)}
                 size="small"
                 fullWidth
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton size="small" onClick={() => setShowCurrent((v) => !v)} edge="end">
-                        {showCurrent ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setShowCurrent((v) => !v)} edge="end">
+                          {showCurrent ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
               <TextField
@@ -263,25 +268,38 @@ export function Settings() {
                 size="small"
                 fullWidth
                 helperText="Mindestens 8 Zeichen"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton size="small" onClick={() => setShowNew((v) => !v)} edge="end">
-                        {showNew ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setShowNew((v) => !v)} edge="end">
+                          {showNew ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
               <TextField
                 label="Neues Passwort bestätigen"
-                type="password"
+                type={showConfirm ? 'text' : 'password'}
                 value={pwConfirm}
                 onChange={(e) => setPwConfirm(e.target.value)}
                 size="small"
                 fullWidth
                 error={pwConfirm.length > 0 && pwNew !== pwConfirm}
                 helperText={pwConfirm.length > 0 && pwNew !== pwConfirm ? 'Passwörter stimmen nicht überein' : ''}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setShowConfirm((v) => !v)} edge="end">
+                          {showConfirm ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
               <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
                 <Button
@@ -332,8 +350,10 @@ export function Settings() {
                 <ListItemText
                   primary="JSON Export"
                   secondary="Vollständige Daten als JSON"
-                  primaryTypographyProps={{ fontSize: '0.9375rem', fontWeight: 500 }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  slotProps={{
+                    primary: { style: { fontSize: '0.9375rem', fontWeight: 500 } },
+                    secondary: { style: { fontSize: '0.75rem' } },
+                  }}
                 />
                 <DownloadRoundedIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
               </ListItemButton>
@@ -355,8 +375,10 @@ export function Settings() {
                 <ListItemText
                   primary="CSV Export"
                   secondary="Tabelle für Excel/Numbers"
-                  primaryTypographyProps={{ fontSize: '0.9375rem', fontWeight: 500 }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  slotProps={{
+                    primary: { style: { fontSize: '0.9375rem', fontWeight: 500 } },
+                    secondary: { style: { fontSize: '0.75rem' } },
+                  }}
                 />
                 <DownloadRoundedIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
               </ListItemButton>

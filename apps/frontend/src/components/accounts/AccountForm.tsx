@@ -16,7 +16,6 @@ import {
   Box,
   Typography,
 } from '@mui/material'
-import Grid from '@mui/material/Grid'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -152,7 +151,7 @@ export function AccountForm({ open, account, onClose }: Props) {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 3 } }}
+      slotProps={{ paper: { sx: { borderRadius: 3, m: 2, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' } } }}
     >
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -211,8 +210,8 @@ export function AccountForm({ open, account, onClose }: Props) {
             )}
           />
 
-          <Grid container spacing={2}>
-            <Grid item xs={8}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 2 }}>
               <Controller
                 name="institution"
                 control={control}
@@ -228,8 +227,8 @@ export function AccountForm({ open, account, onClose }: Props) {
                   />
                 )}
               />
-            </Grid>
-            <Grid item xs={4}>
+            </Box>
+            <Box sx={{ flex: 1 }}>
               <Controller
                 name="currency"
                 control={control}
@@ -241,12 +240,12 @@ export function AccountForm({ open, account, onClose }: Props) {
                     error={!!errors.currency}
                     size="small"
                     placeholder="CHF"
-                    inputProps={{ style: { textTransform: 'uppercase' } }}
+                    slotProps={{ htmlInput: { style: { textTransform: 'uppercase' } } }}
                   />
                 )}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Color picker */}
           <Box>
@@ -281,6 +280,8 @@ export function AccountForm({ open, account, onClose }: Props) {
                         boxShadow: field.value === c ? `0 0 0 1px ${c}` : 'none',
                         transition: 'transform 0.15s, box-shadow 0.15s',
                         '&:hover': { transform: 'scale(1.15)' },
+                        '&:focus': { outline: `2px solid ${TEAL}`, outlineOffset: 2 },
+                        '&:focus-visible': { outline: `2px solid ${TEAL}`, outlineOffset: 2 },
                       }}
                     />
                   ))}

@@ -81,7 +81,7 @@ export function Accounts() {
   }
 
   return (
-    <Box sx={{ pb: 3, maxWidth: 680, mx: 'auto' }}>
+    <Box sx={{ pb: 3, maxWidth: 680, mx: 'auto', animation: 'fadeInUp 0.3s ease-out' }}>
       {/* Header */}
       <Box sx={{ px: 2, pt: 3, pb: 2 }}>
         <Typography
@@ -185,7 +185,7 @@ export function Accounts() {
         onClick={() => { setEditAccount(null); setFormOpen(true) }}
         sx={{
           position: 'fixed',
-          bottom: 80,
+          bottom: 'calc(72px + env(safe-area-inset-bottom))',
           right: 20,
           zIndex: 50,
         }}
@@ -198,7 +198,7 @@ export function Accounts() {
         anchorEl={menuAnchor?.el}
         open={!!menuAnchor}
         onClose={closeMenu}
-        PaperProps={{ sx: { minWidth: 180, borderRadius: 2 } }}
+        slotProps={{ paper: { sx: { minWidth: 180, borderRadius: 2 } } }}
       >
         <MenuItem
           onClick={() => {
@@ -208,7 +208,7 @@ export function Accounts() {
           }}
         >
           <ListItemIcon><EditRoundedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontSize: '0.875rem' }}>
+          <ListItemText slotProps={{ primary: { style: { fontSize: '0.875rem' } } }}>
             Bearbeiten
           </ListItemText>
         </MenuItem>
@@ -219,7 +219,7 @@ export function Accounts() {
           }}
         >
           <ListItemIcon><ArchiveRoundedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontSize: '0.875rem' }}>
+          <ListItemText slotProps={{ primary: { style: { fontSize: '0.875rem' } } }}>
             {menuAnchor?.account.is_active ? 'Archivieren' : 'Aktivieren'}
           </ListItemText>
         </MenuItem>
@@ -232,7 +232,7 @@ export function Accounts() {
           sx={{ color: 'error.main' }}
         >
           <ListItemIcon><DeleteRoundedIcon fontSize="small" sx={{ color: 'error.main' }} /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontSize: '0.875rem', color: 'inherit' }}>
+          <ListItemText slotProps={{ primary: { style: { fontSize: '0.875rem' }, color: 'inherit' } }}>
             Löschen
           </ListItemText>
         </MenuItem>

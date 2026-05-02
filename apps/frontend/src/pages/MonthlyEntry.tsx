@@ -291,28 +291,30 @@ export function MonthlyEntry() {
                       <TextField
                         value={entry.value}
                         onChange={(e) => handleValueChange(index, e.target.value)}
-                        size="small"
+                        size="medium"
                         type="number"
-                        inputProps={{
-                          step: '0.01',
-                          min: entry.account.type === 'LIABILITY' ? undefined : '0',
-                          style: {
-                            fontFamily: '"IBM Plex Mono", monospace',
-                            fontVariantNumeric: 'tabular-nums',
-                            fontSize: '0.9375rem',
-                            fontWeight: 600,
-                            textAlign: 'right',
-                            width: 120,
+                        slotProps={{
+                          htmlInput: {
+                            step: '0.01',
+                            min: entry.account.type === 'LIABILITY' ? undefined : '0',
+                            style: {
+                              fontFamily: '"IBM Plex Mono", monospace',
+                              fontVariantNumeric: 'tabular-nums',
+                              fontSize: '0.9375rem',
+                              fontWeight: 600,
+                              textAlign: 'right',
+                              width: 120,
+                            },
                           },
-                        }}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
-                                CHF
-                              </Typography>
-                            </InputAdornment>
-                          ),
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
+                                  CHF
+                                </Typography>
+                              </InputAdornment>
+                            ),
+                          },
                         }}
                         sx={{
                           flexShrink: 0,
@@ -368,19 +370,21 @@ export function MonthlyEntry() {
                 size="small"
                 type="number"
                 fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
-                        CHF
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  style: {
-                    fontFamily: '"IBM Plex Mono", monospace',
-                    fontVariantNumeric: 'tabular-nums',
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
+                          CHF
+                        </Typography>
+                      </InputAdornment>
+                    ),
+                  },
+                  htmlInput: {
+                    style: {
+                      fontFamily: '"IBM Plex Mono", monospace',
+                      fontVariantNumeric: 'tabular-nums',
+                    },
                   },
                 }}
                 sx={{
@@ -397,19 +401,21 @@ export function MonthlyEntry() {
                 size="small"
                 type="number"
                 fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
-                        CHF
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  style: {
-                    fontFamily: '"IBM Plex Mono", monospace',
-                    fontVariantNumeric: 'tabular-nums',
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
+                          CHF
+                        </Typography>
+                      </InputAdornment>
+                    ),
+                  },
+                  htmlInput: {
+                    style: {
+                      fontFamily: '"IBM Plex Mono", monospace',
+                      fontVariantNumeric: 'tabular-nums',
+                    },
                   },
                 }}
                 sx={{

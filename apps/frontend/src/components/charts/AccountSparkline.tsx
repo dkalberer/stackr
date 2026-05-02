@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Box } from '@mui/material'
 import { LineChart, Line, ResponsiveContainer } from 'recharts'
 import type { BalanceSnapshot } from '../../types'
 
@@ -22,7 +23,7 @@ export function AccountSparkline({ snapshots, width = 80, height = 36, color }: 
   }, [snapshots])
 
   if (data.length < 2) {
-    return <div style={{ width, height }} />
+    return <Box sx={{ width, height }} />
   }
 
   const first = data[0]?.value ?? 0
@@ -31,7 +32,7 @@ export function AccountSparkline({ snapshots, width = 80, height = 36, color }: 
   const lineColor = color ?? (trend ? '#4CAF50' : '#EF5350')
 
   return (
-    <div style={{ width, height, flexShrink: 0 }}>
+    <Box sx={{ width, height, flexShrink: 0 }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
           <Line
@@ -44,6 +45,6 @@ export function AccountSparkline({ snapshots, width = 80, height = 36, color }: 
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </Box>
   )
 }
