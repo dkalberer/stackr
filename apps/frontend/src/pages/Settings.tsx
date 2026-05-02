@@ -417,10 +417,7 @@ export function Settings() {
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {[
-                { label: 'Version', value: '0.1.0' },
-                { label: 'Build', value: 'React 18 + MUI v6' },
-                { label: 'Hosting', value: 'Self-hosted' },
-                { label: 'Datenschutz', value: 'Alle Daten lokal' },
+                { label: 'Version', value: __APP_VERSION__ },
               ].map(({ label, value }) => (
                 <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>{label}</Typography>
