@@ -12,11 +12,10 @@ type Config struct {
 	DBName         string
 	DBUser         string
 	DBPassword     string
-	DBSchema       string
-	JWTSecret      string
-	Port           string
-	MigrationsPath string
-	CORSOrigin     string
+	DBSchema   string
+	JWTSecret  string
+	Port       string
+	CORSOrigin string
 }
 
 // Load reads configuration from environment variables.
@@ -31,9 +30,8 @@ func Load() (*Config, error) {
 		DBPassword:     os.Getenv("DB_PASSWORD"),
 		DBSchema:       getEnvOrDefault("DB_SCHEMA", "stackr"),
 		JWTSecret:      os.Getenv("JWT_SECRET"),
-		Port:           getEnvOrDefault("PORT", "8080"),
-		MigrationsPath: getEnvOrDefault("MIGRATIONS_PATH", "./migrations"),
-		CORSOrigin:     getEnvOrDefault("CORS_ORIGIN", "http://localhost:5173"),
+		Port:       getEnvOrDefault("PORT", "8080"),
+		CORSOrigin: getEnvOrDefault("CORS_ORIGIN", "http://localhost:5173"),
 	}
 
 	if cfg.DBPassword == "" {

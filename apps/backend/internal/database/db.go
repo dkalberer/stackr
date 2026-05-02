@@ -6,10 +6,11 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/dk/stackr/internal/config"
+	"github.com/dk/stackr/migrations"
 )
 
 // Connect creates a pgxpool connection pool and verifies connectivity.
@@ -35,20 +36,22 @@ func Connect(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-// RunMigrations applies all pending up-migrations from the configured path.
+// RunMigrations applies all pending up-migrations from the embedded SQL files.
 // It is safe to call when the schema is already up to date.
 func RunMigrations(cfg *config.Config) error {
+	src, err := iofs.New(migrations.FS, ".")
+	if err != nil {
+		return fmt.Errorf("create migration source: %w", err)
+	}
+
 	// golang-migrate pgx/v5 driver DSN uses the pgx5:// scheme.
-	// search_path is set inside the migration SQL itself (SET search_path = stackr).
 	migrateURL := fmt.Sprintf(
 		"pgx5://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.DBUser, cfg.DBPassword,
 		cfg.DBHost, cfg.DBPort, cfg.DBName,
 	)
 
-	sourceURL := fmt.Sprintf("file://%s", cfg.MigrationsPath)
-
-	m, err := migrate.New(sourceURL, migrateURL)
+	m, err := migrate.NewWithSourceInstance("iofs", src, migrateURL)
 	if err != nil {
 		return fmt.Errorf("create migrator: %w", err)
 	}
