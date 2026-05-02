@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="110" fill="#12121F"/>
+  <!-- Three stacked bars representing net worth growth -->
+  <rect x="96" y="320" width="80" height="120" rx="10" fill="#00BFA5" opacity="0.45"/>
+  <rect x="216" y="240" width="80" height="200" rx="10" fill="#00BFA5" opacity="0.7"/>
+  <rect x="336" y="144" width="80" height="296" rx="10" fill="#00BFA5"/>
+  <!-- Upward trend line -->
+  <polyline points="136,300 256,220 376,124" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  <!-- Dot at peak -->
+  <circle cx="376" cy="124" r="14" fill="#ffffff" opacity="0.9"/>
+</svg>
