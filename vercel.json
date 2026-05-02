@@ -3,7 +3,7 @@
   "outputDirectory": "apps/frontend/dist",
   "installCommand": "pnpm install",
   "framework": "vite",
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- apps/frontend vercel.json",
+  "ignoreCommand": "git diff ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD --quiet -- apps/frontend vercel.json",
   "rewrites": [
     {
       "source": "/api/:path*",
