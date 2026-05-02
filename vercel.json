@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://stackr.onrender.com/api/:path*"
+      "destination": "https://stackr-l9wf.onrender.com/api/:path*"
     }
   ]
 }
