@@ -178,7 +178,7 @@ export function AppLayout({ children }: Props) {
   return (
     <Box
       sx={{
-        display: 'flex',
+        display: isMobile ? 'block' : 'flex',
         minHeight: '100vh',
         backgroundColor: BG_DEFAULT,
       }}
@@ -192,7 +192,7 @@ export function AppLayout({ children }: Props) {
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
-          pb: isMobile ? '80px' : 0,
+          pb: isMobile ? 'calc(56px + env(safe-area-inset-bottom))' : 0,
         }}
       >
         {!isOnline && (
@@ -209,7 +209,7 @@ export function AppLayout({ children }: Props) {
           </Alert>
         )}
 
-        <Box sx={{ flex: 1 }}>
+        <Box>
           {children}
         </Box>
       </Box>
