@@ -3,7 +3,6 @@
   "private": true,
   "description": "stackr - Personal net worth and savings rate tracker",
   "engines": {
-    "node": ">=22",
     "pnpm": ">=9"
   },
   "scripts": {
