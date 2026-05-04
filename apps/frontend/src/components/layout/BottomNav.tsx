@@ -9,6 +9,11 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { alpha } from '@mui/material/styles'
 import { TEAL, BG_DEFAULT } from '../../theme/theme'
 
+const isStandalone = typeof window !== 'undefined' && (
+  window.matchMedia?.('(display-mode: standalone)').matches ||
+  (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+)
+
 const NAV_ITEMS = [
   { icon: <HomeRoundedIcon />, path: '/', label: 'Home' },
   { icon: <AccountBalanceRoundedIcon />, path: '/accounts', label: 'Konten' },
@@ -33,10 +38,9 @@ export function BottomNav() {
         backdropFilter: 'saturate(180%) blur(24px)',
         WebkitBackdropFilter: 'saturate(180%) blur(24px)',
         borderTop: `0.5px solid ${alpha('#fff', 0.08)}`,
-        pb: 'env(safe-area-inset-bottom)',
-        '@media (display-mode: standalone)': {
-          pb: 'max(env(safe-area-inset-bottom) - 12px, 6px)',
-        },
+        pb: isStandalone
+          ? 'max(env(safe-area-inset-bottom) - 22px, 4px)'
+          : 'env(safe-area-inset-bottom)',
       }}
     >
       <Box

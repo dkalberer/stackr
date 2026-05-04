@@ -22,6 +22,11 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { TEAL, BG_PAPER, BORDER_COLOR, BG_DEFAULT } from '../../theme/theme'
 
+const isStandalone = typeof window !== 'undefined' && (
+  window.matchMedia?.('(display-mode: standalone)').matches ||
+  (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+)
+
 const DRAWER_WIDTH = 220
 
 const NAV_ITEMS = [
@@ -193,12 +198,11 @@ export function AppLayout({ children }: Props) {
           flexDirection: 'column',
           minWidth: 0,
           pt: isMobile ? 'env(safe-area-inset-top)' : 0,
-          pb: isMobile ? 'calc(48px + env(safe-area-inset-bottom))' : 0,
-          ...(isMobile && {
-            '@media (display-mode: standalone)': {
-              pb: 'calc(48px + max(env(safe-area-inset-bottom) - 12px, 6px))',
-            },
-          }),
+          pb: isMobile
+            ? isStandalone
+              ? 'calc(48px + max(env(safe-area-inset-bottom) - 22px, 4px))'
+              : 'calc(48px + env(safe-area-inset-bottom))'
+            : 0,
         }}
       >
         {!isOnline && (
