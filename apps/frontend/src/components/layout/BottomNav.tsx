@@ -1,4 +1,5 @@
-import { Box, IconButton } from '@mui/material'
+import { Box, ButtonBase, Typography } from '@mui/material'
+import { cloneElement } from 'react'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded'
@@ -6,14 +7,14 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 import EditCalendarRoundedIcon from '@mui/icons-material/EditCalendarRounded'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { alpha } from '@mui/material/styles'
-import { TEAL, BG_PAPER, BORDER_COLOR } from '../../theme/theme'
+import { TEAL, BG_DEFAULT } from '../../theme/theme'
 
 const NAV_ITEMS = [
-  { icon: <HomeRoundedIcon sx={{ fontSize: 22 }} />, path: '/', label: 'Dashboard' },
-  { icon: <AccountBalanceRoundedIcon sx={{ fontSize: 22 }} />, path: '/accounts', label: 'Konten' },
-  { icon: <EditCalendarRoundedIcon sx={{ fontSize: 22 }} />, path: '/entry', label: 'Eintrag' },
-  { icon: <BarChartRoundedIcon sx={{ fontSize: 22 }} />, path: '/charts', label: 'Charts' },
-  { icon: <SettingsRoundedIcon sx={{ fontSize: 22 }} />, path: '/settings', label: 'Einstellungen' },
+  { icon: <HomeRoundedIcon />, path: '/', label: 'Home' },
+  { icon: <AccountBalanceRoundedIcon />, path: '/accounts', label: 'Konten' },
+  { icon: <EditCalendarRoundedIcon />, path: '/entry', label: 'Eintrag' },
+  { icon: <BarChartRoundedIcon />, path: '/charts', label: 'Charts' },
+  { icon: <SettingsRoundedIcon />, path: '/settings', label: 'Mehr' },
 ] as const
 
 export function BottomNav() {
@@ -28,18 +29,20 @@ export function BottomNav() {
         left: 0,
         right: 0,
         zIndex: 1000,
-        backgroundColor: alpha(BG_PAPER, 0.95),
-        backdropFilter: 'blur(20px)',
-        borderTop: `1px solid ${BORDER_COLOR}`,
+        backgroundColor: alpha(BG_DEFAULT, 0.72),
+        backdropFilter: 'saturate(180%) blur(24px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+        borderTop: `0.5px solid ${alpha('#fff', 0.08)}`,
+        pb: 'env(safe-area-inset-bottom)',
       }}
     >
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'stretch',
           justifyContent: 'space-around',
-          height: 56,
-          px: 1,
+          height: 52,
+          px: 0.5,
         }}
       >
         {NAV_ITEMS.map((item) => {
@@ -48,29 +51,48 @@ export function BottomNav() {
             : location.pathname.startsWith(item.path)
 
           return (
-            <IconButton
+            <ButtonBase
               key={item.path}
               onClick={() => navigate(item.path)}
               aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+              disableRipple
               sx={{
-                borderRadius: '12px',
-                width: 44,
-                height: 44,
-                color: isActive ? TEAL : 'text.disabled',
-                backgroundColor: isActive ? alpha(TEAL, 0.12) : 'transparent',
-                transition: 'background-color 0.2s, color 0.2s',
-                '&:hover': {
-                  backgroundColor: isActive ? alpha(TEAL, 0.18) : alpha('#fff', 0.06),
-                },
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                color: isActive ? TEAL : alpha('#fff', 0.42),
+                transition: 'color 180ms ease, transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                WebkitTapHighlightColor: 'transparent',
+                '&:active': { transform: 'scale(0.88)' },
               }}
             >
-              {item.icon}
-            </IconButton>
+              {cloneElement(item.icon, {
+                sx: {
+                  fontSize: 24,
+                  filter: isActive ? `drop-shadow(0 0 8px ${alpha(TEAL, 0.45)})` : 'none',
+                  transition: 'filter 180ms ease',
+                },
+              })}
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: '0.625rem',
+                  fontWeight: isActive ? 600 : 500,
+                  letterSpacing: '0.01em',
+                  lineHeight: 1,
+                  fontFamily: '"DM Sans", sans-serif',
+                }}
+              >
+                {item.label}
+              </Typography>
+            </ButtonBase>
           )
         })}
       </Box>
-      {/* Safe area fill — extends nav background into home indicator zone */}
-      <Box sx={{ height: 'env(safe-area-inset-bottom)', backgroundColor: BG_PAPER }} />
     </Box>
   )
 }
