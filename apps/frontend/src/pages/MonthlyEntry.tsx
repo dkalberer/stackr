@@ -158,10 +158,12 @@ export function MonthlyEntry() {
         })
       }
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['snapshots'] })
-      void queryClient.invalidateQueries({ queryKey: ['income'] })
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['snapshots'] }),
+        queryClient.invalidateQueries({ queryKey: ['income'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ])
       showSuccess(`Daten für ${formatMonth(year, month)} gespeichert`)
     },
     onError: () => showError('Fehler beim Speichern'),

@@ -155,9 +155,13 @@ export const theme = createTheme({
           color-scheme: dark;
         }
         * { box-sizing: border-box; }
+        html {
+          overflow-x: hidden;
+        }
         body {
           background: ${BG_DEFAULT};
           overflow-x: hidden;
+          max-width: 100vw;
         }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
