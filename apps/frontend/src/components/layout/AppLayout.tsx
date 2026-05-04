@@ -194,6 +194,11 @@ export function AppLayout({ children }: Props) {
           minWidth: 0,
           pt: isMobile ? 'env(safe-area-inset-top)' : 0,
           pb: isMobile ? 'calc(48px + env(safe-area-inset-bottom))' : 0,
+          ...(isMobile && {
+            '@media (display-mode: standalone)': {
+              pb: 'calc(48px + max(env(safe-area-inset-bottom) - 12px, 6px))',
+            },
+          }),
         }}
       >
         {!isOnline && (

@@ -34,6 +34,9 @@ export function BottomNav() {
         WebkitBackdropFilter: 'saturate(180%) blur(24px)',
         borderTop: `0.5px solid ${alpha('#fff', 0.08)}`,
         pb: 'env(safe-area-inset-bottom)',
+        '@media (display-mode: standalone)': {
+          pb: 'max(env(safe-area-inset-bottom) - 12px, 6px)',
+        },
       }}
     >
       <Box
