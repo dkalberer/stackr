@@ -1,3 +1,5 @@
+SET search_path = stackr;
+
 -- Add exchange rate to balance snapshots so we can preserve the rate at the
 -- moment of capture and convert balances to the base currency (CHF) for
 -- aggregate views like the dashboard and allocation breakdown.
