@@ -46,9 +46,10 @@ func RunMigrations(cfg *config.Config) error {
 
 	// golang-migrate pgx/v5 driver DSN uses the pgx5:// scheme.
 	migrateURL := fmt.Sprintf(
-		"pgx5://%s:%s@%s:%s/%s?sslmode=disable",
+		"pgx5://%s:%s@%s:%s/%s?sslmode=%s",
 		cfg.DBUser, cfg.DBPassword,
 		cfg.DBHost, cfg.DBPort, cfg.DBName,
+		cfg.DBSSLMode,
 	)
 
 	m, err := migrate.NewWithSourceInstance("iofs", src, migrateURL)

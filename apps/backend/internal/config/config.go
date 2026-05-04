@@ -13,6 +13,7 @@ type Config struct {
 	DBUser         string
 	DBPassword     string
 	DBSchema   string
+	DBSSLMode  string
 	JWTSecret  string
 	Port       string
 	CORSOrigin string
@@ -29,6 +30,7 @@ func Load() (*Config, error) {
 		DBUser:         getEnvOrDefault("DB_USER", "postgres"),
 		DBPassword:     os.Getenv("DB_PASSWORD"),
 		DBSchema:       getEnvOrDefault("DB_SCHEMA", "stackr"),
+		DBSSLMode:      getEnvOrDefault("DB_SSL_MODE", "require"),
 		JWTSecret:      os.Getenv("JWT_SECRET"),
 		Port:       getEnvOrDefault("PORT", "8080"),
 		CORSOrigin: getEnvOrDefault("CORS_ORIGIN", "http://localhost:5173"),
@@ -48,8 +50,8 @@ func Load() (*Config, error) {
 // Sets search_path so all queries target the stackr schema without qualification.
 func (c *Config) DSN() string {
 	return fmt.Sprintf(
-		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=%s",
-		c.DBHost, c.DBPort, c.DBName, c.DBUser, c.DBPassword, c.DBSchema,
+		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s search_path=%s",
+		c.DBHost, c.DBPort, c.DBName, c.DBUser, c.DBPassword, c.DBSSLMode, c.DBSchema,
 	)
 }
 

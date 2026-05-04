@@ -13,6 +13,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/ulule/limiter/v3"
+	limitergin "github.com/ulule/limiter/v3/drivers/middleware/gin"
+	limiterstore "github.com/ulule/limiter/v3/drivers/store/memory"
 
 	"github.com/dk/stackr/internal/config"
 	"github.com/dk/stackr/internal/database"
@@ -127,14 +130,24 @@ func buildRouter(
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	// CORS — self-hosted, allow all origins
+	// CORS — restrict to the configured frontend origin.
 	router.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:    []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:   []string{"Content-Disposition"},
-		MaxAge:          12 * time.Hour,
+		AllowOrigins:     []string{cfg.CORSOrigin},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Disposition"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
+
+	// Secure HTTP response headers.
+	router.Use(func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Next()
+	})
 
 	v1 := router.Group("/api/v1")
 
@@ -143,8 +156,12 @@ func buildRouter(
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// --- Auth routes (public) ---
+	// --- Auth routes (public, rate-limited to 10 requests/minute per IP) ---
+	rate, _ := limiter.NewRateFromFormatted("10-M")
+	authLimiter := limitergin.NewMiddleware(limiter.New(limiterstore.NewStore(), rate))
+
 	auth := v1.Group("/auth")
+	auth.Use(authLimiter)
 	{
 		auth.POST("/login", authHandler.Login)
 		auth.GET("/me", middleware.Auth(authSvc), authHandler.Me)
