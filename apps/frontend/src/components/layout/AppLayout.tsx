@@ -193,7 +193,7 @@ export function AppLayout({ children }: Props) {
           flexDirection: 'column',
           minWidth: 0,
           pt: isMobile ? 'env(safe-area-inset-top)' : 0,
-          pb: isMobile ? 'calc(52px + env(safe-area-inset-bottom))' : 0,
+          pb: isMobile ? 'calc(48px + env(safe-area-inset-bottom))' : 0,
         }}
       >
         {!isOnline && (

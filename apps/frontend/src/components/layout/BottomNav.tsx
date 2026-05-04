@@ -41,7 +41,7 @@ export function BottomNav() {
           display: 'flex',
           alignItems: 'stretch',
           justifyContent: 'space-around',
-          height: 52,
+          height: 48,
           px: 0.5,
         }}
       >
@@ -62,8 +62,9 @@ export function BottomNav() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'flex-end',
                 gap: '2px',
+                pb: '4px',
                 color: isActive ? TEAL : alpha('#fff', 0.42),
                 transition: 'color 180ms ease, transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
                 WebkitTapHighlightColor: 'transparent',
