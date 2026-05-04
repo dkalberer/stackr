@@ -1,4 +1,4 @@
-import { Box, IconButton, Paper } from '@mui/material'
+import { Box, IconButton } from '@mui/material'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded'
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded'
@@ -21,17 +21,16 @@ export function BottomNav() {
   const location = useLocation()
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 1000,
-        backgroundColor: BG_PAPER,
+        backgroundColor: alpha(BG_PAPER, 0.95),
+        backdropFilter: 'blur(20px)',
         borderTop: `1px solid ${BORDER_COLOR}`,
-        pb: 'env(safe-area-inset-bottom)',
       }}
     >
       <Box
@@ -70,6 +69,8 @@ export function BottomNav() {
           )
         })}
       </Box>
-    </Paper>
+      {/* Safe area fill — extends nav background into home indicator zone */}
+      <Box sx={{ height: 'env(safe-area-inset-bottom)' }} />
+    </Box>
   )
 }
