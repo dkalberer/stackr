@@ -174,7 +174,7 @@ export function AppLayout({ children }: Props) {
           variant="caption"
           sx={{ color: 'text.disabled', letterSpacing: '0.04em' }}
         >
-          stackr v0.1.0
+          stackr {__APP_VERSION__}
         </Typography>
       </Box>
     </Drawer>
