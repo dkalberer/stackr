@@ -70,7 +70,7 @@ export function BottomNav() {
         })}
       </Box>
       {/* Safe area fill — extends nav background into home indicator zone */}
-      <Box sx={{ height: 'env(safe-area-inset-bottom)' }} />
+      <Box sx={{ height: 'env(safe-area-inset-bottom)', backgroundColor: BG_PAPER }} />
     </Box>
   )
 }

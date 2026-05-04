@@ -39,6 +39,9 @@ export function Login() {
     defaultValues: { email: '', password: '' },
   })
 
+  const { ref: emailRef, ...emailReg } = register('email')
+  const { ref: passwordRef, ...passwordReg } = register('password')
+
   const onSubmit = handleSubmit(async (values) => {
     setError(null)
     try {
@@ -141,6 +144,9 @@ export function Login() {
 
           <Box component="form" onSubmit={onSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
+              {...emailReg}
+              inputRef={emailRef}
+              id="email"
               label="E-Mail"
               type="email"
               fullWidth
@@ -149,16 +155,20 @@ export function Login() {
               autoFocus
               error={!!errors.email}
               helperText={errors.email?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>@</Typography>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>@</Typography>
+                    </InputAdornment>
+                  ),
+                },
               }}
-              {...register('email')}
             />
             <TextField
+              {...passwordReg}
+              inputRef={passwordRef}
+              id="password"
               label="Passwort"
               type={showPassword ? 'text' : 'password'}
               fullWidth
@@ -166,21 +176,22 @@ export function Login() {
               autoComplete="current-password"
               error={!!errors.password}
               helperText={errors.password?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockRoundedIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword((s) => !s)} edge="end" size="small" sx={{ color: 'text.disabled' }}>
-                      {showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockRoundedIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword((s) => !s)} edge="end" size="small" sx={{ color: 'text.disabled' }}>
+                        {showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
               }}
-              {...register('password')}
             />
             <Button
               type="submit"
