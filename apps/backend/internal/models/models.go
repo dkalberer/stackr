@@ -57,15 +57,19 @@ type Account struct {
 }
 
 // BalanceSnapshot captures the balance of an account for a specific month.
-// Balance is stored in the smallest currency unit (Rappen for CHF, cents for EUR/USD).
+// Balance is stored in the smallest currency unit of the account's own currency
+// (Rappen for CHF, cents for EUR/USD). ExchangeRate is the rate from the
+// account currency to CHF that was current at the time the snapshot was saved
+// and is used by aggregate views to convert balances into the base currency.
 type BalanceSnapshot struct {
-	ID        string    `json:"id"         db:"id"`
-	AccountID string    `json:"account_id" db:"account_id"`
-	Year      int       `json:"year"       db:"year"`
-	Month     int       `json:"month"      db:"month"`
-	Balance   int64     `json:"balance"    db:"balance"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID           string    `json:"id"            db:"id"`
+	AccountID    string    `json:"account_id"    db:"account_id"`
+	Year         int       `json:"year"          db:"year"`
+	Month        int       `json:"month"         db:"month"`
+	Balance      int64     `json:"balance"       db:"balance"`
+	ExchangeRate float64   `json:"exchange_rate" db:"exchange_rate"`
+	CreatedAt    time.Time `json:"created_at"    db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"    db:"updated_at"`
 }
 
 // IncomeEntry records gross and net income for a specific month.

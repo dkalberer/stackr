@@ -24,7 +24,7 @@ func NewSnapshotRepository(db *pgxpool.Pool) *SnapshotRepository {
 // optionally filtered by year and/or month (pass 0 to skip that filter).
 func (r *SnapshotRepository) ListByUser(ctx context.Context, userID string, year, month int) ([]models.BalanceSnapshot, error) {
 	query := `
-		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.created_at, bs.updated_at
+		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.exchange_rate, bs.created_at, bs.updated_at
 		FROM balance_snapshots bs
 		JOIN accounts a ON a.id = bs.account_id
 		WHERE a.user_id = $1`
@@ -54,7 +54,7 @@ func (r *SnapshotRepository) ListByUser(ctx context.Context, userID string, year
 	var snapshots []models.BalanceSnapshot
 	for rows.Next() {
 		var s models.BalanceSnapshot
-		if err := rows.Scan(&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.ExchangeRate, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan snapshot: %w", err)
 		}
 		snapshots = append(snapshots, s)
@@ -68,14 +68,14 @@ func (r *SnapshotRepository) ListByUser(ctx context.Context, userID string, year
 // GetByID returns a single snapshot, verifying ownership via the accounts join.
 func (r *SnapshotRepository) GetByID(ctx context.Context, id, userID string) (*models.BalanceSnapshot, error) {
 	const query = `
-		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.created_at, bs.updated_at
+		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.exchange_rate, bs.created_at, bs.updated_at
 		FROM balance_snapshots bs
 		JOIN accounts a ON a.id = bs.account_id
 		WHERE bs.id = $1 AND a.user_id = $2`
 
 	var s models.BalanceSnapshot
 	err := r.db.QueryRow(ctx, query, id, userID).Scan(
-		&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.CreatedAt, &s.UpdatedAt,
+		&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.ExchangeRate, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -100,16 +100,18 @@ func (r *SnapshotRepository) Upsert(ctx context.Context, s *models.BalanceSnapsh
 	}
 
 	const query = `
-		INSERT INTO balance_snapshots (account_id, year, month, balance)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO balance_snapshots (account_id, year, month, balance, exchange_rate)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (account_id, year, month) DO UPDATE
-		    SET balance = EXCLUDED.balance, updated_at = NOW()
-		RETURNING id, account_id, year, month, balance, created_at, updated_at`
+		    SET balance = EXCLUDED.balance,
+		        exchange_rate = EXCLUDED.exchange_rate,
+		        updated_at = NOW()
+		RETURNING id, account_id, year, month, balance, exchange_rate, created_at, updated_at`
 
 	var created models.BalanceSnapshot
-	err := r.db.QueryRow(ctx, query, s.AccountID, s.Year, s.Month, s.Balance).Scan(
+	err := r.db.QueryRow(ctx, query, s.AccountID, s.Year, s.Month, s.Balance, s.ExchangeRate).Scan(
 		&created.ID, &created.AccountID, &created.Year, &created.Month,
-		&created.Balance, &created.CreatedAt, &created.UpdatedAt,
+		&created.Balance, &created.ExchangeRate, &created.CreatedAt, &created.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("upsert snapshot: %w", err)
@@ -124,11 +126,11 @@ func (r *SnapshotRepository) UpdateBalance(ctx context.Context, id, userID strin
 		SET balance = $1, updated_at = NOW()
 		FROM accounts a
 		WHERE bs.id = $2 AND bs.account_id = a.id AND a.user_id = $3
-		RETURNING bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.created_at, bs.updated_at`
+		RETURNING bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.exchange_rate, bs.created_at, bs.updated_at`
 
 	var s models.BalanceSnapshot
 	err := r.db.QueryRow(ctx, query, balance, id, userID).Scan(
-		&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.CreatedAt, &s.UpdatedAt,
+		&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.ExchangeRate, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -151,7 +153,7 @@ type HistoryFilter struct {
 // ListHistory returns snapshots for a user optionally filtered by account and date range.
 func (r *SnapshotRepository) ListHistory(ctx context.Context, userID string, f HistoryFilter) ([]models.BalanceSnapshot, error) {
 	query := `
-		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.created_at, bs.updated_at
+		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.exchange_rate, bs.created_at, bs.updated_at
 		FROM balance_snapshots bs
 		JOIN accounts a ON a.id = bs.account_id
 		WHERE a.user_id = $1`
@@ -186,7 +188,7 @@ func (r *SnapshotRepository) ListHistory(ctx context.Context, userID string, f H
 	var snapshots []models.BalanceSnapshot
 	for rows.Next() {
 		var s models.BalanceSnapshot
-		if err := rows.Scan(&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.ExchangeRate, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan snapshot: %w", err)
 		}
 		snapshots = append(snapshots, s)
@@ -198,12 +200,15 @@ func (r *SnapshotRepository) ListHistory(ctx context.Context, userID string, f H
 }
 
 // NetWorthForMonth computes the net worth for a given user/year/month by
-// summing all balance snapshots (liabilities are subtracted).
+// summing all balance snapshots converted to CHF via the per-snapshot
+// exchange rate. Liabilities are subtracted.
 // It returns 0 if there are no snapshots for that month.
 func (r *SnapshotRepository) NetWorthForMonth(ctx context.Context, userID string, year, month int) (int64, error) {
 	const query = `
 		SELECT COALESCE(SUM(
-		    CASE WHEN a.type = 'LIABILITY' THEN -bs.balance ELSE bs.balance END
+		    CASE WHEN a.type = 'LIABILITY'
+		         THEN -ROUND(bs.balance * bs.exchange_rate)::BIGINT
+		         ELSE  ROUND(bs.balance * bs.exchange_rate)::BIGINT END
 		), 0)
 		FROM balance_snapshots bs
 		JOIN accounts a ON a.id = bs.account_id
@@ -219,7 +224,7 @@ func (r *SnapshotRepository) NetWorthForMonth(ctx context.Context, userID string
 // AllSnapshotsForUser returns every snapshot for a user, used by the export handler.
 func (r *SnapshotRepository) AllSnapshotsForUser(ctx context.Context, userID string) ([]models.BalanceSnapshot, error) {
 	const query = `
-		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.created_at, bs.updated_at
+		SELECT bs.id, bs.account_id, bs.year, bs.month, bs.balance, bs.exchange_rate, bs.created_at, bs.updated_at
 		FROM balance_snapshots bs
 		JOIN accounts a ON a.id = bs.account_id
 		WHERE a.user_id = $1
@@ -234,7 +239,7 @@ func (r *SnapshotRepository) AllSnapshotsForUser(ctx context.Context, userID str
 	var snapshots []models.BalanceSnapshot
 	for rows.Next() {
 		var s models.BalanceSnapshot
-		if err := rows.Scan(&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.AccountID, &s.Year, &s.Month, &s.Balance, &s.ExchangeRate, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan snapshot: %w", err)
 		}
 		snapshots = append(snapshots, s)

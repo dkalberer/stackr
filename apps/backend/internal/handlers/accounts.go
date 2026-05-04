@@ -57,6 +57,24 @@ func (h *AccountHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, accounts)
 }
 
+// Get handles GET /accounts/:id.
+func (h *AccountHandler) Get(c *gin.Context) {
+	userID := middleware.UserIDFromContext(c)
+	accountID := c.Param("id")
+
+	account, err := h.accounts.GetByID(c.Request.Context(), accountID, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch account"})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
+}
+
 // Create handles POST /accounts.
 func (h *AccountHandler) Create(c *gin.Context) {
 	userID := middleware.UserIDFromContext(c)

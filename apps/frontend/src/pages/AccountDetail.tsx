@@ -25,7 +25,7 @@ import { getSnapshotHistory } from '../api/snapshots'
 import { queryKeys } from '../types'
 import { AccountTypeIcon } from '../components/accounts/AccountTypeIcon'
 import { NetWorthChart } from '../components/charts/NetWorthChart'
-import { formatCHF, formatPercent, formatMonth, accountTypeLabel } from '../utils/format'
+import { formatCurrency, formatPercent, formatMonth, accountTypeLabel } from '../utils/format'
 import { TEAL } from '../theme/theme'
 import { alpha } from '@mui/material/styles'
 
@@ -154,7 +154,7 @@ export function AccountDetail() {
                     color: account?.type === 'LIABILITY' ? 'error.main' : 'text.primary',
                   }}
                 >
-                  {formatCHF(currentBalance)}
+                  {formatCurrency(currentBalance, account?.currency || 'CHF')}
                 </Typography>
                 {previousBalance !== 0 && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
@@ -172,7 +172,7 @@ export function AccountDetail() {
                       }}
                     >
                       {momChange >= 0 ? '+' : '−'}
-                      {formatCHF(Math.abs(momChange))} ({formatPercent(Math.abs(momPercent), 1)}) MoM
+                      {formatCurrency(Math.abs(momChange), account?.currency || 'CHF')} ({formatPercent(Math.abs(momPercent), 1)}) MoM
                     </Typography>
                   </Box>
                 )}
@@ -262,7 +262,7 @@ export function AccountDetail() {
                             fontSize: '0.8125rem',
                           }}
                         >
-                          {formatCHF(snap.balance)}
+                          {formatCurrency(snap.balance, account?.currency || 'CHF')}
                         </TableCell>
                         <TableCell
                           align="right"
@@ -273,7 +273,7 @@ export function AccountDetail() {
                             color: change === null ? 'text.disabled' : isPos ? 'success.main' : 'error.main',
                           }}
                         >
-                          {change === null ? '—' : `${isPos ? '+' : '−'}${formatCHF(Math.abs(change))}`}
+                          {change === null ? '—' : `${isPos ? '+' : '−'}${formatCurrency(Math.abs(change), account?.currency || 'CHF')}`}
                         </TableCell>
                         <TableCell
                           align="right"

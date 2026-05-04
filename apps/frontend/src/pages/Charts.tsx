@@ -45,14 +45,14 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 }
 
 interface AccountGrowthChartProps {
-  accountIds: string[]
+  accounts: { id: string; name: string }[]
 }
 
-function AccountGrowthChart({ accountIds }: AccountGrowthChartProps) {
+function AccountGrowthChart({ accounts }: AccountGrowthChartProps) {
   const queries = useQueries({
-    queries: accountIds.map((id) => ({
-      queryKey: queryKeys.snapshotHistory(id),
-      queryFn: () => getSnapshotHistory(id),
+    queries: accounts.map((a) => ({
+      queryKey: queryKeys.snapshotHistory(a.id),
+      queryFn: () => getSnapshotHistory(a.id),
       staleTime: 60_000,
     })),
   })
@@ -67,7 +67,7 @@ function AccountGrowthChart({ accountIds }: AccountGrowthChartProps) {
       snaps.forEach((snap: BalanceSnapshot) => {
         const key = `${snap.year}-${String(snap.month).padStart(2, '0')}`
         const existing = timeline.get(key) ?? ({ year: snap.year, month: snap.month } as Record<string, number>)
-        const accountId = accountIds[i]
+        const accountId = accounts[i]?.id
         if (accountId) {
           existing[accountId] = snap.balance / 100
         }
@@ -81,7 +81,7 @@ function AccountGrowthChart({ accountIds }: AccountGrowthChartProps) {
         ...v,
         label: formatMonthShort(v['month'] as number),
       }))
-  }, [queries, accountIds])
+  }, [queries, accounts])
 
   if (isLoading) {
     return <Skeleton variant="rounded" height={220} />
@@ -148,11 +148,12 @@ function AccountGrowthChart({ accountIds }: AccountGrowthChartProps) {
               )
             }}
           />
-          {accountIds.map((id, i) => (
+          {accounts.map((a, i) => (
             <Line
-              key={id}
+              key={a.id}
               type="monotone"
-              dataKey={id}
+              dataKey={a.id}
+              name={a.name}
               stroke={CHART_COLORS[i % CHART_COLORS.length]}
               strokeWidth={2}
               dot={false}
@@ -374,7 +375,9 @@ export function Charts() {
                 {loadingAccounts ? (
                   <Skeleton variant="rounded" height={220} />
                 ) : visibleAccountIds.length > 0 ? (
-                  <AccountGrowthChart accountIds={visibleAccountIds} />
+                  <AccountGrowthChart
+                    accounts={activeAccounts.filter((a) => visibleAccountIds.includes(a.id))}
+                  />
                 ) : (
                   <Box sx={{ py: 4, textAlign: 'center' }}>
                     <Typography color="text.secondary" variant="body2">

@@ -200,7 +200,7 @@ export function AppLayout({ children }: Props) {
           pt: isMobile ? 'env(safe-area-inset-top)' : 0,
           pb: isMobile
             ? isStandalone
-              ? 'calc(48px + max(env(safe-area-inset-bottom) - 22px, 4px))'
+              ? '48px'
               : 'calc(48px + env(safe-area-inset-bottom))'
             : 0,
         }}

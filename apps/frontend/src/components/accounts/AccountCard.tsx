@@ -8,7 +8,7 @@ import { queryKeys } from '../../types'
 import { getSnapshotHistory } from '../../api/snapshots'
 import { AccountTypeIcon } from './AccountTypeIcon'
 import { AccountSparkline } from '../charts/AccountSparkline'
-import { formatCHF, formatPercent, accountTypeLabel } from '../../utils/format'
+import { formatCurrency, formatPercent, accountTypeLabel } from '../../utils/format'
 
 interface Props {
   account: Account
@@ -90,7 +90,7 @@ export function AccountCard({ account, onContextMenu }: Props) {
                     flexShrink: 0,
                   }}
                 >
-                  {formatCHF(current)}
+                  {formatCurrency(current, account.currency || 'CHF')}
                 </Typography>
               )}
             </Box>

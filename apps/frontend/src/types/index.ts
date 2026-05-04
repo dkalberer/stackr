@@ -33,7 +33,8 @@ export interface BalanceSnapshot {
   account_id: string
   year: number
   month: number
-  balance: number // in Rappen (CHF * 100)
+  balance: number // smallest unit of the account's own currency (Rappen for CHF, cents for EUR/USD)
+  exchange_rate: number // rate from account currency to CHF, captured at save time
   created_at: string
   updated_at: string
 }

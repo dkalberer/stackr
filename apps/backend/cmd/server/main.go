@@ -59,6 +59,7 @@ func run() error {
 
 	// --- Services ---
 	authSvc := services.NewAuthService(cfg.JWTSecret)
+	fxSvc := services.NewFXService()
 
 	// --- Repositories ---
 	userRepo := repository.NewUserRepository(pool)
@@ -69,7 +70,7 @@ func run() error {
 	// --- Handlers ---
 	authHandler := handlers.NewAuthHandler(userRepo, authSvc)
 	accountHandler := handlers.NewAccountHandler(accountRepo)
-	snapshotHandler := handlers.NewSnapshotHandler(snapshotRepo)
+	snapshotHandler := handlers.NewSnapshotHandler(snapshotRepo, accountRepo, fxSvc)
 	incomeHandler := handlers.NewIncomeHandler(incomeRepo)
 	dashboardHandler := handlers.NewDashboardHandler(accountRepo, snapshotRepo, incomeRepo)
 	exportHandler := handlers.NewExportHandler(accountRepo, snapshotRepo, incomeRepo)
@@ -176,6 +177,7 @@ func buildRouter(
 		accounts := protected.Group("/accounts")
 		{
 			accounts.GET("", accountHandler.List)
+			accounts.GET("/:id", accountHandler.Get)
 			accounts.POST("", accountHandler.Create)
 			accounts.PUT("/:id", accountHandler.Update)
 			accounts.DELETE("/:id", accountHandler.Delete)

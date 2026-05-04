@@ -97,7 +97,7 @@ export function Accounts() {
           {isLoading ? (
             <Skeleton width={80} />
           ) : (
-            `${activeAccounts.length} Konto${activeAccounts.length !== 1 ? 'en' : ''}`
+            `${activeAccounts.length} ${activeAccounts.length === 1 ? 'Konto' : 'Konten'}`
           )}
         </Typography>
       </Box>

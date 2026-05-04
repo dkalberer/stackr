@@ -38,9 +38,7 @@ export function BottomNav() {
         backdropFilter: 'saturate(180%) blur(24px)',
         WebkitBackdropFilter: 'saturate(180%) blur(24px)',
         borderTop: `0.5px solid ${alpha('#fff', 0.08)}`,
-        pb: isStandalone
-          ? 'max(env(safe-area-inset-bottom) - 22px, 4px)'
-          : 'env(safe-area-inset-bottom)',
+        pb: isStandalone ? 0 : 'env(safe-area-inset-bottom)',
       }}
     >
       <Box

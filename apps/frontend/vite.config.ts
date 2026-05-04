@@ -37,8 +37,13 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/api\/v1\/.*/,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'api-cache' },
+            handler: 'NetworkFirst',
+            method: 'GET',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 5,
+              cacheableResponse: { statuses: [0, 200] },
+            },
           },
         ],
       },

@@ -116,10 +116,13 @@ export function NetWorthChart({ data, height = 220, showGrid = false }: Props) {
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => {
-              const abs = Math.abs(v)
-              if (abs >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M'
-              if (abs >= 1_000) return (v / 1_000).toFixed(0) + 'k'
-              return v.toFixed(0)
+              // Values come from the API in Rappen (CHF * 100); convert to CHF
+              // before applying the compact suffix.
+              const chf = v / 100
+              const abs = Math.abs(chf)
+              if (abs >= 1_000_000) return (chf / 1_000_000).toFixed(1) + 'M'
+              if (abs >= 1_000) return (chf / 1_000).toFixed(0) + 'k'
+              return chf.toFixed(0)
             }}
             width={52}
           />

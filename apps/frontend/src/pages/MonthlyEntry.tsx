@@ -312,7 +312,7 @@ export function MonthlyEntry() {
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontFamily: '"IBM Plex Mono", monospace' }}>
-                                  CHF
+                                  {entry.account.currency || 'CHF'}
                                 </Typography>
                               </InputAdornment>
                             ),

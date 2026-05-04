@@ -13,6 +13,17 @@ export function formatCHF(rappen: number): string {
 }
 
 /**
+ * Format minor units (cents/rappen) to a string in the given currency.
+ * 150000, 'USD' → "USD 1'500.00"
+ */
+export function formatCurrency(minor: number, currency: string): string {
+  const major = minor / 100
+  const abs = Math.abs(major)
+  const formatted = abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+  return (major < 0 ? '−' : '') + currency + ' ' + formatted
+}
+
+/**
  * Format Rappen to compact CHF string
  * 1500000 → "CHF 15'000"
  * 150000000 → "CHF 1.5M"

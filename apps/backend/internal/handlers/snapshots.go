@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -10,16 +12,39 @@ import (
 	"github.com/dk/stackr/internal/middleware"
 	"github.com/dk/stackr/internal/models"
 	"github.com/dk/stackr/internal/repository"
+	"github.com/dk/stackr/internal/services"
 )
 
 // SnapshotHandler handles HTTP requests for balance snapshot resources.
 type SnapshotHandler struct {
 	snapshots *repository.SnapshotRepository
+	accounts  *repository.AccountRepository
+	fx        *services.FXService
 }
 
 // NewSnapshotHandler constructs a SnapshotHandler.
-func NewSnapshotHandler(snapshots *repository.SnapshotRepository) *SnapshotHandler {
-	return &SnapshotHandler{snapshots: snapshots}
+func NewSnapshotHandler(
+	snapshots *repository.SnapshotRepository,
+	accounts *repository.AccountRepository,
+	fx *services.FXService,
+) *SnapshotHandler {
+	return &SnapshotHandler{snapshots: snapshots, accounts: accounts, fx: fx}
+}
+
+// resolveRate returns the exchange rate from the account currency to CHF for
+// the given year/month. CHF (or empty) returns 1.0 directly. If the FX lookup
+// fails we log the failure and fall back to 1.0 so the save does not block;
+// the user can re-save later to capture an accurate rate.
+func (h *SnapshotHandler) resolveRate(ctx context.Context, currency string, year, month int) float64 {
+	if currency == "" || currency == "CHF" {
+		return 1.0
+	}
+	rate, err := h.fx.GetRate(ctx, currency, "CHF", year, month)
+	if err != nil {
+		log.Printf("fx lookup %s→CHF for %d-%02d failed: %v", currency, year, month, err)
+		return 1.0
+	}
+	return rate
 }
 
 type createSnapshotRequest struct {
@@ -73,11 +98,23 @@ func (h *SnapshotHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// Look up account so we can capture the FX rate for its currency.
+	account, err := h.accounts.GetByID(c.Request.Context(), req.AccountID, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch account"})
+		return
+	}
+
 	snapshot := &models.BalanceSnapshot{
-		AccountID: req.AccountID,
-		Year:      req.Year,
-		Month:     req.Month,
-		Balance:   req.Balance,
+		AccountID:    req.AccountID,
+		Year:         req.Year,
+		Month:        req.Month,
+		Balance:      req.Balance,
+		ExchangeRate: h.resolveRate(c.Request.Context(), account.Currency, req.Year, req.Month),
 	}
 
 	created, err := h.snapshots.Upsert(c.Request.Context(), snapshot, userID)
@@ -135,17 +172,35 @@ func (h *SnapshotHandler) BulkUpsert(c *gin.Context) {
 		return
 	}
 
+	// Pre-fetch the user's accounts so we can look up each snapshot's currency
+	// and ownership in O(1) without re-querying for every entry.
+	accounts, err := h.accounts.ListByUser(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch accounts"})
+		return
+	}
+	accountByID := make(map[string]*models.Account, len(accounts))
+	for i := range accounts {
+		accountByID[accounts[i].ID] = &accounts[i]
+	}
+
 	results := make([]models.BalanceSnapshot, 0, len(req.Snapshots))
 	for _, s := range req.Snapshots {
 		if s.AccountID == "" || s.Year < 2000 || s.Year > 2100 || s.Month < 1 || s.Month > 12 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid snapshot entry"})
 			return
 		}
+		acc, ok := accountByID[s.AccountID]
+		if !ok {
+			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+			return
+		}
 		created, err := h.snapshots.Upsert(c.Request.Context(), &models.BalanceSnapshot{
-			AccountID: s.AccountID,
-			Year:      s.Year,
-			Month:     s.Month,
-			Balance:   s.Balance,
+			AccountID:    s.AccountID,
+			Year:         s.Year,
+			Month:        s.Month,
+			Balance:      s.Balance,
+			ExchangeRate: h.resolveRate(c.Request.Context(), acc.Currency, s.Year, s.Month),
 		}, userID)
 		if err != nil {
 			if errors.Is(err, repository.ErrNotFound) {

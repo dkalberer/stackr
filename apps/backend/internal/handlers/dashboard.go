@@ -149,9 +149,17 @@ func (h *DashboardHandler) Summary(c *gin.Context) {
 }
 
 // savingsRateForMonth returns the savings rate for a single month.
-// savings_amount = net_worth(month) - net_worth(prev_month)
-// savings_rate   = (savings_amount / net_income) * 100
-// Returns 0 if income data is unavailable.
+//
+// In Switzerland salaries typically arrive on the 25th and most users record
+// their balances on the 1st of the following month. That means the snapshot
+// labelled "month M" actually contains the salary that arrived in month M-1.
+// To keep numerator and denominator on the same period, the savings rate for
+// month M is computed against the income recorded for month M-1:
+//
+//	savings_amount = net_worth(M) - net_worth(M-1)
+//	savings_rate   = (savings_amount / net_income(M-1)) * 100
+//
+// Returns 0 if income data for the previous month is unavailable.
 func (h *DashboardHandler) savingsRateForMonth(ctx context.Context, userID string, year, month int) float64 {
 	prevYear, prevMonth := previousMonth(year, month)
 
@@ -164,7 +172,7 @@ func (h *DashboardHandler) savingsRateForMonth(ctx context.Context, userID strin
 		return 0
 	}
 
-	incomeEntry, err := h.income.GetByYearMonth(ctx, userID, year, month)
+	incomeEntry, err := h.income.GetByYearMonth(ctx, userID, prevYear, prevMonth)
 	if err != nil || incomeEntry.NetIncome == 0 {
 		return 0
 	}
@@ -210,7 +218,9 @@ func (h *DashboardHandler) computeAllocation(ctx context.Context, userID string,
 		accountTypeMap[a.ID] = a.Type
 	}
 
-	// Sum balances per account type (absolute values for allocation display).
+	// Sum balances per account type, converting each snapshot to CHF via the
+	// rate captured at save time. This keeps multi-currency portfolios honest
+	// in the allocation breakdown.
 	typeBalances := make(map[models.AccountType]int64)
 	var totalAbsolute int64
 	for _, s := range snapshots {
@@ -218,8 +228,9 @@ func (h *DashboardHandler) computeAllocation(ctx context.Context, userID string,
 		if !ok {
 			continue
 		}
-		typeBalances[aType] += s.Balance
-		totalAbsolute += s.Balance
+		chf := int64(float64(s.Balance)*s.ExchangeRate + 0.5)
+		typeBalances[aType] += chf
+		totalAbsolute += chf
 	}
 
 	result := make([]allocationEntry, 0, len(typeBalances))
