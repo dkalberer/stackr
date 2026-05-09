@@ -5,7 +5,8 @@ backend:
   image:
     pullPolicy: Never
   env:
-    CORS_ORIGIN: "http://stackr.localhost"
+    CORS_ORIGIN: "http://stackr.localhost,http://localhost:3000"
+    DB_SSL_MODE: "disable"
   # Secrets injected via values (not from an external secret manager in local dev)
   # Override secrets section below
 

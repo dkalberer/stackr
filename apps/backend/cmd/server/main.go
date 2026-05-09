@@ -133,7 +133,7 @@ func buildRouter(
 
 	// CORS — restrict to the configured frontend origin.
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{cfg.CORSOrigin},
+		AllowOrigins:     cfg.CORSOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Disposition"},
@@ -206,6 +206,7 @@ func buildRouter(
 		dashboard := protected.Group("/dashboard")
 		{
 			dashboard.GET("/summary", dashboardHandler.Summary)
+			dashboard.GET("/net-worth", dashboardHandler.NetWorthHistory)
 			dashboard.GET("/savings-rate", dashboardHandler.SavingsRateHistory)
 		}
 

@@ -11,15 +11,16 @@ import {
   Paper,
 } from '@mui/material'
 import { useQuery, useQueries } from '@tanstack/react-query'
-import { getDashboardSummary, getSavingsRateHistory } from '../api/dashboard'
+import { getDashboardSummary, getNetWorthHistory, getSavingsRateHistory } from '../api/dashboard'
 import { getAccounts } from '../api/accounts'
 import { getSnapshotHistory } from '../api/snapshots'
 import { queryKeys, type BalanceSnapshot } from '../types'
 import { NetWorthChart } from '../components/charts/NetWorthChart'
 import { SavingsRateChart } from '../components/charts/SavingsRateChart'
+import { CashflowChart } from '../components/charts/CashflowChart'
 import { AllocationDonut } from '../components/charts/AllocationDonut'
 import { formatCHF, formatPercent, formatMonthShort } from '../utils/format'
-import { BORDER_COLOR, BG_ELEVATED, ACCOUNT_TYPE_COLORS } from '../theme/theme'
+import { BORDER_COLOR, BG_ELEVATED, ACCOUNT_TYPE_COLORS, TEAL } from '../theme/theme'
 import { alpha } from '@mui/material/styles'
 import {
   LineChart,
@@ -30,6 +31,91 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+
+type RangeMonths = 12 | 24 | 60 | null
+
+const RANGE_OPTIONS: { label: string; months: RangeMonths }[] = [
+  { label: '1J', months: 12 },
+  { label: '2J', months: 24 },
+  { label: '5J', months: 60 },
+  { label: 'Alle', months: null },
+]
+
+const CURRENT_YEAR = new Date().getFullYear()
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2017 }, (_, i) => CURRENT_YEAR - i)
+
+function filterByRange<T extends { year: number; month: number }>(
+  data: T[],
+  rangeMonths: RangeMonths,
+): T[] {
+  if (rangeMonths === null) return data
+  const now = new Date()
+  let cutoffYear = now.getFullYear()
+  let cutoffMonth = now.getMonth() + 1 - rangeMonths
+  while (cutoffMonth <= 0) {
+    cutoffMonth += 12
+    cutoffYear -= 1
+  }
+  return data.filter(
+    (d) => d.year > cutoffYear || (d.year === cutoffYear && d.month >= cutoffMonth),
+  )
+}
+
+interface ChartFilterProps {
+  range: RangeMonths
+  year: number | null
+  onRangeChange: (v: RangeMonths) => void
+  onYearChange: (v: number | null) => void
+}
+
+function ChartFilter({ range, year, onRangeChange, onYearChange }: ChartFilterProps) {
+  const chipSx = (active: boolean) => ({
+    fontSize: '0.6875rem',
+    fontFamily: '"IBM Plex Mono", monospace',
+    fontWeight: active ? 700 : 400,
+    backgroundColor: active ? alpha(TEAL, 0.15) : alpha('#fff', 0.05),
+    color: active ? TEAL : 'text.secondary',
+    border: `1px solid ${active ? alpha(TEAL, 0.35) : BORDER_COLOR}`,
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+  })
+
+  return (
+    <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+      <Box sx={{ display: 'flex', gap: 0.75 }}>
+        {RANGE_OPTIONS.map(({ label, months }) => (
+          <Chip
+            key={label}
+            label={label}
+            size="small"
+            onClick={() => { onRangeChange(months); onYearChange(null) }}
+            sx={chipSx(year === null && range === months)}
+          />
+        ))}
+      </Box>
+      <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+        {YEAR_OPTIONS.map((y) => (
+          <Chip
+            key={y}
+            label={y}
+            size="small"
+            onClick={() => { onYearChange(y); onRangeChange(12) }}
+            sx={chipSx(year === y)}
+          />
+        ))}
+      </Box>
+    </Box>
+  )
+}
+
+function applyFilter<T extends { year: number; month: number }>(
+  data: T[],
+  range: RangeMonths,
+  year: number | null,
+): T[] {
+  if (year !== null) return data.filter((d) => d.year === year)
+  return filterByRange(data, range)
+}
 
 const CHART_COLORS = Object.values(ACCOUNT_TYPE_COLORS)
 
@@ -46,9 +132,11 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 interface AccountGrowthChartProps {
   accounts: { id: string; name: string }[]
+  rangeMonths: RangeMonths
+  selectedYear: number | null
 }
 
-function AccountGrowthChart({ accounts }: AccountGrowthChartProps) {
+function AccountGrowthChart({ accounts, rangeMonths, selectedYear }: AccountGrowthChartProps) {
   const queries = useQueries({
     queries: accounts.map((a) => ({
       queryKey: queryKeys.snapshotHistory(a.id),
@@ -63,7 +151,7 @@ function AccountGrowthChart({ accounts }: AccountGrowthChartProps) {
     const timeline = new Map<string, Record<string, number>>()
 
     queries.forEach((result, i) => {
-      const snaps = result.data ?? []
+      const snaps = applyFilter(result.data ?? [], rangeMonths, selectedYear)
       snaps.forEach((snap: BalanceSnapshot) => {
         const key = `${snap.year}-${String(snap.month).padStart(2, '0')}`
         const existing = timeline.get(key) ?? ({ year: snap.year, month: snap.month } as Record<string, number>)
@@ -81,7 +169,7 @@ function AccountGrowthChart({ accounts }: AccountGrowthChartProps) {
         ...v,
         label: formatMonthShort(v['month'] as number),
       }))
-  }, [queries, accounts])
+  }, [queries, accounts, rangeMonths, selectedYear])
 
   if (isLoading) {
     return <Skeleton variant="rounded" height={220} />
@@ -169,6 +257,14 @@ function AccountGrowthChart({ accounts }: AccountGrowthChartProps) {
 export function Charts() {
   const [tab, setTab] = useState(0)
   const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(new Set())
+  const [nwRange, setNwRange] = useState<RangeMonths>(12)
+  const [nwYear, setNwYear] = useState<number | null>(null)
+  const [srRange, setSrRange] = useState<RangeMonths>(24)
+  const [srYear, setSrYear] = useState<number | null>(null)
+  const [accountRange, setAccountRange] = useState<RangeMonths>(null)
+  const [accountYear, setAccountYear] = useState<number | null>(null)
+  const [cfRange, setCfRange] = useState<RangeMonths>(24)
+  const [cfYear, setCfYear] = useState<number | null>(null)
 
   const { data: dashboard, isLoading: loadingDash } = useQuery({
     queryKey: queryKeys.dashboard,
@@ -176,9 +272,15 @@ export function Charts() {
     staleTime: 30_000,
   })
 
+  const { data: netWorthHistory = [], isLoading: loadingNWH } = useQuery({
+    queryKey: queryKeys.netWorthHistory(120),
+    queryFn: () => getNetWorthHistory(120),
+    staleTime: 60_000,
+  })
+
   const { data: savingsRate = [], isLoading: loadingSR } = useQuery({
-    queryKey: queryKeys.savingsRate(24),
-    queryFn: () => getSavingsRateHistory(24),
+    queryKey: queryKeys.savingsRate(120),
+    queryFn: () => getSavingsRateHistory(120),
     staleTime: 60_000,
   })
 
@@ -193,6 +295,36 @@ export function Charts() {
     selectedAccounts.size > 0
       ? Array.from(selectedAccounts)
       : activeAccounts.slice(0, 4).map((a) => a.id)
+
+  const filteredNetWorth = useMemo(
+    () => applyFilter(netWorthHistory, nwRange, nwYear),
+    [netWorthHistory, nwRange, nwYear],
+  )
+
+  const filteredSR = useMemo(() => {
+    const filtered = applyFilter(savingsRate, srRange, srYear)
+    if (srYear === null && srRange === null) {
+      const firstWithIncome = filtered.findIndex((p) => p.has_income)
+      return firstWithIncome >= 0 ? filtered.slice(firstWithIncome) : filtered
+    }
+    return filtered
+  }, [savingsRate, srRange, srYear])
+
+  const filteredCF = useMemo(
+    () => applyFilter(savingsRate, cfRange, cfYear),
+    [savingsRate, cfRange, cfYear],
+  )
+
+  const cfTotals = useMemo(() => {
+    const months = filteredCF.filter((p) => p.has_income && p.net_income > 0)
+    const totalIncome = months.reduce((s, p) => s + p.net_income, 0)
+    const totalSavings = months.reduce((s, p) => s + p.savings_amount, 0)
+    const totalExpenses = totalIncome - totalSavings
+    const avgRate = months.length > 0
+      ? months.reduce((s, p) => s + p.savings_rate, 0) / months.length
+      : 0
+    return { totalIncome, totalSavings, totalExpenses, avgRate, count: months.length }
+  }, [filteredCF])
 
   const toggleAccount = (id: string) => {
     setSelectedAccounts((prev) => {
@@ -232,6 +364,7 @@ export function Charts() {
         >
           <Tab label="Nettovermögen" />
           <Tab label="Sparquote" />
+          <Tab label="Cashflow" />
           <Tab label="Allokation" />
           <Tab label="Konten" />
         </Tabs>
@@ -242,12 +375,13 @@ export function Charts() {
         <>
           <SectionHeader>Nettovermögen über Zeit</SectionHeader>
           <Box sx={{ px: 2 }}>
+            <ChartFilter range={nwRange} year={nwYear} onRangeChange={setNwRange} onYearChange={setNwYear} />
             <Card>
               <CardContent>
-                {loadingDash ? (
+                {loadingNWH ? (
                   <Skeleton variant="rounded" height={240} />
-                ) : dashboard?.net_worth_history && dashboard.net_worth_history.length > 0 ? (
-                  <NetWorthChart data={dashboard.net_worth_history} height={240} showGrid />
+                ) : filteredNetWorth.length > 0 ? (
+                  <NetWorthChart data={filteredNetWorth} height={240} showGrid />
                 ) : (
                   <Box sx={{ py: 4, textAlign: 'center' }}>
                     <Typography color="text.secondary" variant="body2">
@@ -264,14 +398,15 @@ export function Charts() {
       {/* Tab: Savings Rate */}
       {tab === 1 && (
         <>
-          <SectionHeader>Sparquote (24 Monate)</SectionHeader>
+          <SectionHeader>Sparquote</SectionHeader>
           <Box sx={{ px: 2 }}>
+            <ChartFilter range={srRange} year={srYear} onRangeChange={setSrRange} onYearChange={setSrYear} />
             <Card>
               <CardContent>
                 {loadingSR ? (
                   <Skeleton variant="rounded" height={240} />
-                ) : savingsRate.length > 0 ? (
-                  <SavingsRateChart data={savingsRate} height={240} />
+                ) : filteredSR.length > 0 ? (
+                  <SavingsRateChart data={filteredSR} height={240} />
                 ) : (
                   <Box sx={{ py: 4, textAlign: 'center' }}>
                     <Typography color="text.secondary" variant="body2">
@@ -309,8 +444,71 @@ export function Charts() {
         </>
       )}
 
-      {/* Tab: Allocation */}
+      {/* Tab: Cashflow */}
       {tab === 2 && (
+        <>
+          <SectionHeader>Einnahmen & Ausgaben</SectionHeader>
+          <Box sx={{ px: 2 }}>
+            <ChartFilter range={cfRange} year={cfYear} onRangeChange={setCfRange} onYearChange={setCfYear} />
+            <Card>
+              <CardContent>
+                {loadingSR ? (
+                  <Skeleton variant="rounded" height={240} />
+                ) : filteredCF.filter((p) => p.has_income).length > 0 ? (
+                  <CashflowChart data={filteredCF} height={240} />
+                ) : (
+                  <Box sx={{ py: 4, textAlign: 'center' }}>
+                    <Typography color="text.secondary" variant="body2">
+                      Noch keine Einkommensdaten vorhanden
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+
+            {cfTotals.count > 0 && (
+              <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                {[
+                  { label: 'Einnahmen', value: formatCHF(cfTotals.totalIncome), color: '#00BFA5' },
+                  { label: 'Ausgaben', value: formatCHF(cfTotals.totalExpenses), color: '#FF7043' },
+                  {
+                    label: 'Gespart',
+                    value: formatCHF(cfTotals.totalSavings),
+                    color: cfTotals.totalSavings >= 0 ? '#66BB6A' : '#EF5350',
+                  },
+                  {
+                    label: 'Ø Sparquote',
+                    value: formatPercent(cfTotals.avgRate),
+                    color: cfTotals.avgRate >= 0 ? '#66BB6A' : '#EF5350',
+                  },
+                ].map(({ label, value, color }) => (
+                  <Card key={label} sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mb: 0.25 }}>
+                        {label}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: '"IBM Plex Mono", monospace',
+                          fontVariantNumeric: 'tabular-nums',
+                          fontWeight: 700,
+                          fontSize: '0.9375rem',
+                          color,
+                        }}
+                      >
+                        {value}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </>
+      )}
+
+      {/* Tab: Allocation */}
+      {tab === 3 && (
         <>
           <SectionHeader>Asset Allocation</SectionHeader>
           <Box sx={{ px: 2 }}>
@@ -338,12 +536,26 @@ export function Charts() {
       )}
 
       {/* Tab: Account Growth */}
-      {tab === 3 && (
+      {tab === 4 && (
         <>
           <SectionHeader>Kontoverlauf</SectionHeader>
           <Box sx={{ px: 2, mb: 2 }}>
+            <ChartFilter range={accountRange} year={accountYear} onRangeChange={setAccountRange} onYearChange={setAccountYear} />
             {!loadingAccounts && (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                <Chip
+                  label="Alle"
+                  size="small"
+                  onClick={() => setSelectedAccounts(new Set())}
+                  sx={{
+                    fontSize: '0.75rem',
+                    backgroundColor: selectedAccounts.size === 0 ? alpha(TEAL, 0.15) : alpha('#fff', 0.05),
+                    color: selectedAccounts.size === 0 ? TEAL : 'text.secondary',
+                    border: `1px solid ${selectedAccounts.size === 0 ? alpha(TEAL, 0.35) : BORDER_COLOR}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                />
                 {activeAccounts.map((account, i) => {
                   const isSelected = visibleAccountIds.includes(account.id)
                   const color = CHART_COLORS[i % CHART_COLORS.length]!
@@ -358,9 +570,9 @@ export function Charts() {
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { toggleAccount(account.id); e.preventDefault() } }}
                       sx={{
                         fontSize: '0.75rem',
-                        backgroundColor: isSelected ? alpha(color, 0.15) : alpha('#fff', 0.05),
-                        color: isSelected ? color : 'text.secondary',
-                        border: `1px solid ${isSelected ? alpha(color, 0.35) : BORDER_COLOR}`,
+                        backgroundColor: isSelected && selectedAccounts.size > 0 ? alpha(color, 0.15) : selectedAccounts.size > 0 ? alpha('#fff', 0.05) : alpha(color, 0.15),
+                        color: isSelected && selectedAccounts.size > 0 ? color : selectedAccounts.size > 0 ? 'text.secondary' : color,
+                        border: `1px solid ${isSelected && selectedAccounts.size > 0 ? alpha(color, 0.35) : selectedAccounts.size > 0 ? BORDER_COLOR : alpha(color, 0.35)}`,
                         cursor: 'pointer',
                         transition: 'all 0.15s',
                       }}
@@ -377,6 +589,8 @@ export function Charts() {
                 ) : visibleAccountIds.length > 0 ? (
                   <AccountGrowthChart
                     accounts={activeAccounts.filter((a) => visibleAccountIds.includes(a.id))}
+                    rangeMonths={accountRange}
+                    selectedYear={accountYear}
                   />
                 ) : (
                   <Box sx={{ py: 4, textAlign: 'center' }}>

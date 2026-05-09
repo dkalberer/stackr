@@ -288,6 +288,39 @@ func (h *DashboardHandler) estimateFireNumber(ctx context.Context, userID string
 	return annualExpenses * 25
 }
 
+// NetWorthHistory handles GET /dashboard/net-worth?months=120
+func (h *DashboardHandler) NetWorthHistory(c *gin.Context) {
+	userID := middleware.UserIDFromContext(c)
+	ctx := c.Request.Context()
+
+	months := queryInt(c, "months")
+	if months <= 0 || months > 1200 {
+		months = 120
+	}
+
+	now := time.Now()
+	currentYear := now.Year()
+	currentMonth := int(now.Month())
+
+	type netWorthHistoryPoint struct {
+		Year     int   `json:"year"`
+		Month    int   `json:"month"`
+		NetWorth int64 `json:"net_worth"`
+	}
+
+	result := make([]netWorthHistoryPoint, 0, months)
+	for i := months - 1; i >= 0; i-- {
+		y, m := monthsAgo(currentYear, currentMonth, i)
+		nw, err := h.snapshots.NetWorthForMonth(ctx, userID, y, m)
+		if err != nil || nw == 0 {
+			continue
+		}
+		result = append(result, netWorthHistoryPoint{Year: y, Month: m, NetWorth: nw})
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // SavingsRateHistory handles GET /dashboard/savings-rate?months=12
 func (h *DashboardHandler) SavingsRateHistory(c *gin.Context) {
 	userID := middleware.UserIDFromContext(c)
@@ -303,10 +336,12 @@ func (h *DashboardHandler) SavingsRateHistory(c *gin.Context) {
 	currentMonth := int(now.Month())
 
 	type savingsRatePoint struct {
-		Year        int     `json:"year"`
-		Month       int     `json:"month"`
-		SavingsRate float64 `json:"savings_rate"`
-		HasIncome   bool    `json:"has_income"`
+		Year          int     `json:"year"`
+		Month         int     `json:"month"`
+		SavingsRate   float64 `json:"savings_rate"`
+		SavingsAmount int64   `json:"savings_amount"`
+		NetIncome     int64   `json:"net_income"`
+		HasIncome     bool    `json:"has_income"`
 	}
 
 	result := make([]savingsRatePoint, 0, months)
@@ -314,14 +349,27 @@ func (h *DashboardHandler) SavingsRateHistory(c *gin.Context) {
 		y, m := monthsAgo(currentYear, currentMonth, i)
 		rate := h.savingsRateForMonth(ctx, userID, y, m)
 
-		_, incErr := h.income.GetByYearMonth(ctx, userID, y, m)
+		prevYear, prevMonth := previousMonth(y, m)
+		incomeEntry, incErr := h.income.GetByYearMonth(ctx, userID, prevYear, prevMonth)
 		hasIncome := incErr == nil
 
+		var netIncome, savingsAmount int64
+		if hasIncome {
+			netIncome = incomeEntry.NetIncome
+			currentNW, e1 := h.snapshots.NetWorthForMonth(ctx, userID, y, m)
+			previousNW, e2 := h.snapshots.NetWorthForMonth(ctx, userID, prevYear, prevMonth)
+			if e1 == nil && e2 == nil {
+				savingsAmount = currentNW - previousNW
+			}
+		}
+
 		result = append(result, savingsRatePoint{
-			Year:        y,
-			Month:       m,
-			SavingsRate: round2(rate),
-			HasIncome:   hasIncome,
+			Year:          y,
+			Month:         m,
+			SavingsRate:   round2(rate),
+			SavingsAmount: savingsAmount,
+			NetIncome:     netIncome,
+			HasIncome:     hasIncome,
 		})
 	}
 

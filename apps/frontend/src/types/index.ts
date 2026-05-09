@@ -85,6 +85,7 @@ export interface SavingsRatePoint {
   savings_rate: number
   savings_amount: number
   net_income: number
+  has_income: boolean
 }
 
 export interface AuthResponse {
@@ -105,4 +106,5 @@ export const queryKeys = {
   income: (year?: number, month?: number) => ['income', year, month] as const,
   dashboard: ['dashboard', 'summary'] as const,
   savingsRate: (months: number) => ['dashboard', 'savings-rate', months] as const,
+  netWorthHistory: (months: number) => ['dashboard', 'net-worth', months] as const,
 } as const

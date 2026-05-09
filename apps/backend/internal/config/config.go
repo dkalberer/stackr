@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Config holds all application configuration loaded from environment variables.
@@ -16,7 +17,7 @@ type Config struct {
 	DBSSLMode  string
 	JWTSecret  string
 	Port       string
-	CORSOrigin string
+	CORSOrigins []string
 }
 
 // Load reads configuration from environment variables.
@@ -32,8 +33,8 @@ func Load() (*Config, error) {
 		DBSchema:       getEnvOrDefault("DB_SCHEMA", "stackr"),
 		DBSSLMode:      getEnvOrDefault("DB_SSL_MODE", "require"),
 		JWTSecret:      os.Getenv("JWT_SECRET"),
-		Port:       getEnvOrDefault("PORT", "8080"),
-		CORSOrigin: getEnvOrDefault("CORS_ORIGIN", "http://localhost:5173"),
+		Port:        getEnvOrDefault("PORT", "8080"),
+		CORSOrigins: parseCORSOrigins(getEnvOrDefault("CORS_ORIGIN", "http://localhost:5173")),
 	}
 
 	if cfg.DBPassword == "" {
@@ -53,6 +54,16 @@ func (c *Config) DSN() string {
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s search_path=%s",
 		c.DBHost, c.DBPort, c.DBName, c.DBUser, c.DBPassword, c.DBSSLMode, c.DBSchema,
 	)
+}
+
+func parseCORSOrigins(raw string) []string {
+	var origins []string
+	for _, o := range strings.Split(raw, ",") {
+		if s := strings.TrimSpace(o); s != "" {
+			origins = append(origins, s)
+		}
+	}
+	return origins
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
